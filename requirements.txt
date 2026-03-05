@@ -10,3 +10,6 @@ python-jose[cryptography]
 psycopg2-binary
 fastapi-mail
 python-dotenv
+
+
+sentry-sdk

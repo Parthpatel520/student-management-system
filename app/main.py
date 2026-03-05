@@ -4,10 +4,15 @@ from fastapi.responses import HTMLResponse
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 import time
-
+import sentry_sdk
 
 from app.models import *
 from app.routers import auth, student, course, enrollment, grade
+
+sentry_sdk.init(
+    dsn="https://25d8908435c57a0f8d4d59b3ba363e58@o4510991203958784.ingest.us.sentry.io/4510991210971136",
+    send_default_pii=True,
+)
 
 app = FastAPI()
 
@@ -64,3 +69,8 @@ async def monitor_requests(request: Request, call_next):
 @app.get("/metrics")
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+@app.get("/sentry-error")
+def error():
+    division_by_zero = 1 / 0
+    return {"result": division_by_zero}
