@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
-from time import time
+import time
 
 
 from app.models import *
@@ -14,34 +14,6 @@ app = FastAPI()
 # PROMETHEUS METRICS
 REQUEST_COUNT = Counter("http_requests_total", "Total API Requests")
 REQUEST_TIME = Histogram("http_request_duration_seconds", "Request processing time")
-
-
-# Middleware to track request count and response time
-@app.middleware("http")
-async def monitor_requests(request: Request, call_next):
-    start_time = time.time()
-
-    response = await call_next(request)
-
-    REQUEST_COUNT.inc()
-    REQUEST_TIME.observe(time.time() - start_time)
-
-    return response
-
-
-# Metrics endpoint for Prometheus
-@app.get("/metrics")
-def metrics():
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
-
-# Routers
-app.include_router(auth.router)
-app.include_router(student.router)
-app.include_router(course.router)
-app.include_router(enrollment.router)
-app.include_router(grade.router)
-
 
 # Home Page
 @app.get("/")
@@ -69,3 +41,26 @@ def welcome():
         </html>
         """
     )
+
+# Routers
+app.include_router(auth.router)
+app.include_router(student.router)
+app.include_router(course.router)
+app.include_router(enrollment.router)
+app.include_router(grade.router)
+
+# Middleware to track request count and response time
+@app.middleware("http")
+async def monitor_requests(request: Request, call_next):
+    start_time = time.time()
+
+    response = await call_next(request)
+
+    REQUEST_COUNT.inc()
+    REQUEST_TIME.observe(time.time() - start_time)
+    return response
+
+# Metrics endpoint for Prometheus
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
